@@ -1,0 +1,52 @@
+name: PowerShell Composite Action CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "**/powershell/functions/**/*.ps1"
+      - "**/powershell/tests/*.ps1"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/powershell/functions/**/*.ps1"
+      - "**/powershell/tests/*.ps1"
+      - ".github/workflows/ci.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: actions-testing
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pester test main powershell function
+        run: |
+          # Test main function
+          $mainFunction = Get-ChildItem -Path "${{ github.workspace }}/powershell/functions/main" -filter "*.ps1"
+          $mainFunctionBaseName = $mainFunction.BaseName
+          $pesterTestFullName = "${{ github.workspace }}/powershell/tests/$mainFunctionBaseName.Tests.ps1"
+
+          Invoke-Pester -Path $pesterTestFullName -Output Detailed
+
+        shell: pwsh
+
+      - name: Test action
+        uses: ./
+        with:
+          param1: ""
+          param2: ""
+
+      - name: Confirm action performed required tasks
+        run: |
+          # Steps to confirm the action succeeded.
+
+        shell: pwsh
